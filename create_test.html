@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Create Test - ExamPro{% endblock %}
+{% block content %}
+<div class="glass p-4">
+  <h3>Create a new Test</h3>
+  <div class="mb-3">
+    <input id="title" class="form-control mb-2" placeholder="Test title (e.g. Python Basics)">
+  </div>
+  <div id="questionsArea"></div>
+
+  <div class="d-flex gap-2 mt-3">
+    <button id="addQ" class="btn btn-outline-light">Add Question</button>
+    <button id="save" class="btn btn-glow">Save Test</button>
+    <a id="openLink" class="btn btn-secondary" style="display:none" target="_blank">Open Test</a>
+  </div>
+</div>
+
+<script>
+let questions = [];
+function renderQuestions(){
+  const area = document.getElementById('questionsArea');
+  area.innerHTML = '';
+  questions.forEach((q, idx) => {
+    const div = document.createElement('div');
+    div.className='card p-2 mb-2';
+    div.innerHTML = `
+      <label>Q${idx+1}:</label>
+      <input class="form-control qtext mb-2" data-idx="${idx}" placeholder="Question text" value="${q.q || ''}">
+      <div class="mb-2">
+        ${[0,1,2,3].map(i=>`<input class="form-control opt mb-1" data-idx="${idx}" data-opt="${i}" placeholder="Option ${i+1}" value="${q.options? q.options[i] : ''}">`).join('')}
+      </div>
+      <label>Correct option index (0-3)</label>
+      <input class="form-control correct mb-1" data-idx="${idx}" value="${q.answer ?? 0}">
+    `;
+    area.appendChild(div);
+  });
+}
+document.getElementById('addQ').onclick = ()=>{
+  questions.push({q:'', options:['','','',''], answer:0});
+  renderQuestions();
+};
+document.getElementById('save').onclick = async ()=>{
+  const title = document.getElementById('title').value || 'Untitled Test';
+  // collect fields
+  const cards = document.querySelectorAll('#questionsArea .card');
+  const qs = [];
+  cards.forEach((c,i)=>{
+    const qtext = c.querySelector('.qtext').value;
+    const opts = Array.from(c.querySelectorAll('.opt')).map(x=>x.value);
+    const ans = parseInt(c.querySelector('.correct').value || '0');
+    qs.push({q:qtext, options: opts, answer: ans});
+  });
+  const payload = { title: title, questions: qs };
+  const res = await fetch('/create_test', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  const j = await res.json();
+  if(j.status === 'ok'){
+    alert('Test saved: ' + j.test_id);
+    const link = document.getElementById('openLink');
+    link.href = '/take_test/' + j.test_id;
+    link.style.display = 'inline-block';
+  } else alert('Error saving test');
+};
+renderQuestions();
+</script>
+{% endblock %}

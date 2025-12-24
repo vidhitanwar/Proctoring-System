@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}My Reports - ExamPro{% endblock %}
+{% block content %}
+<div class="glass p-4">
+  <h3>My Analysis Reports</h3>
+  {% if analyses %}
+    {% for a in analyses %}
+      <div class="card mb-3 p-3">
+        <h5>{{ a.file }}</h5>
+        <pre style="white-space:pre-wrap">{{ a.data | tojson }}</pre>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No analyses yet. Finish a test to generate analysis.</p>
+  {% endif %}
+</div>
+{% endblock %}

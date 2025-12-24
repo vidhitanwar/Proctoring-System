@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - ExamPro{% endblock %}
+{% block content %}
+<div class="glass p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-0">Dashboard</h2>
+      <small class="text-muted">Overview & quick actions</small>
+    </div>
+    <div>
+      <a href="{{ url_for('start_test') }}" class="btn btn-lg btn-primary btn-glow">Start Proctored Test</a>
+      <a href="{{ url_for('my_reports') }}" class="btn btn-outline-light ms-2">My Reports</a>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card nav-card p-3">
+        <h5>Live Monitoring</h5>
+        <p>Start a live session or open an ongoing session monitor.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card nav-card p-3">
+        <h5>Behavior Fingerprinting</h5>
+        <p>AI learns baseline and flags deviations during the test.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card nav-card p-3">
+        <h5>Reports & Analysis</h5>
+        <p>Heatmaps, suspicion scores and auto-generated reasons.</p>
+      </div>
+    </div>
+  </div>
+
+  <h5>Recent sessions</h5>
+  <ul>
+    {% for s in sessions %}
+      <li>
+        {{ s }} —
+        <a href="{{ url_for('live_monitor', username=username, session_id=s.split('_')[-1]) }}">Open Monitor</a> |
+        <a href="{{ url_for('view_analysis', username=username, sid=s.split('_')[-1]) }}">View Analysis</a>
+      </li>
+    {% else %}
+      <li>No past sessions yet</li>
+    {% endfor %}
+  </ul>
+
+  <h5 class="mt-4">Active Flags</h5>
+  <ul>
+    {% for f in flags %}
+      <li>
+        {{ f.ts }} — Score: {{ f.score }}% — {{ f.reason }}
+        <a class="ms-2" href="{{ url_for('view_analysis', username=username, sid=f.session_id) }}">See Analysis</a>
+      </li>
+    {% else %}
+      <li>No flags</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

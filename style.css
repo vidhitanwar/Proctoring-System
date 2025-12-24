@@ -1,0 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg,#0f0c29,#302b63,#24243e); color: #eef1ff; min-height:100vh; }
+.glass { background: rgba(255,255,255,0.06); border-radius: 14px; border:1px solid rgba(255,255,255,0.06); box-shadow: 0 8px 30px rgba(0,0,0,0.4); padding:16px; }
+.form-input { background: rgba(255,255,255,0.08); border:none; color:white; height:48px; border-radius:10px; }
+.btn-glow { background: linear-gradient(90deg,#6a5af9,#a48bff); border:none; color:white; box-shadow: 0 6px 18px rgba(106,90,249,0.25); border-radius:10px; height:48px; }
+.nav-card { border-radius:12px; background: rgba(255,255,255,0.03); padding:18px; transition: all .25s ease; }
+.nav-card:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(12,12,30,0.6); }
+.video-border { border-radius:12px; overflow:hidden; box-shadow: 0 12px 30px rgba(106,90,249,0.12); border: 2px solid rgba(164,139,255,0.12); max-width:100%; position:relative; }
+#overlay { position:absolute; top:0; left:0; pointer-events:none; }

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Analysis - ExamPro{% endblock %}
+{% block content %}
+<div class="glass p-4">
+  <h3>Session Analysis for {{ username }} / {{ sid }}</h3>
+  <div class="mt-3">
+    <h5>Summary</h5>
+    <ul>
+      {% for k,v in analysis.items() %}
+        <li><strong>{{ k }}</strong>: {{ v }}</li>
+      {% endfor %}
+    </ul>
+    <h5>AI Reasons</h5>
+    <ul>
+      {% for r in reasons %}<li>{{ r }}</li>{% endfor %}
+    </ul>
+    {% if analysis.heatmap %}
+      <h5>Attention Heatmap</h5>
+      <img src="/static/images/{{ analysis.heatmap.split('/')[-1] }}" style="max-width:100%;border-radius:12px;"/>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

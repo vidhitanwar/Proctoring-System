@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Live Monitor - ExamPro{% endblock %}
+{% block content %}
+<div class="glass p-4">
+  <h4>Live Monitor — Session: {{ session_id }}</h4>
+  <div class="row">
+    <div class="col-md-8">
+      <div class="video-border">
+        <video id="video" autoplay playsinline width="720" height="540"></video>
+        <canvas id="overlay" width="720" height="540" style="position:absolute; top:0; left:0; pointer-events:none;"></canvas>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <h5>Realtime Info</h5>
+      <div id="liveInfo">
+        <p>Face: <span id="liveFace">—</span></p>
+        <p>Blink: <span id="liveBlink">—</span></p>
+        <p>Mouth: <span id="liveMouth">—</span></p>
+        <p>Suspicion: <strong id="liveScore">0%</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const sessionId = "{{ session_id }}"; // monitor uses same capture logic as test page
+// To avoid duplicating logic, user can open test page to capture; this live monitor shows recorded events and flags
+(async function loadEvents(){
+  // fetch recorded events and display last state
+  const res = await fetch('/static'); // placeholder - no direct endpoint; UI mainly links
+})();
+</script>
+{% endblock %}

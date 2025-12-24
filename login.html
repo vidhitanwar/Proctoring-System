@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Login - ExamPro{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-center">
+  <div class="card glass p-4" style="width:420px;">
+    <h3 class="text-center mb-3 text-white">Welcome Back</h3>
+    <form method="post">
+      <div class="mb-3">
+        <input class="form-control form-input" name="username" placeholder="Username" required>
+      </div>
+      <div class="mb-3">
+        <input type="password" class="form-control form-input" name="password" placeholder="Password" required>
+      </div>
+      <button class="btn btn-primary w-100 btn-glow">Login</button>
+    </form>
+    <p class="text-center mt-3 text-muted">Don't have an account? <a href="{{ url_for('signup') }}">Sign up</a></p>
+  </div>
+</div>
+{% endblock %}

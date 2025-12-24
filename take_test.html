@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Take Test - ExamPro{% endblock %}
+{% block content %}
+<div class="glass p-4">
+  <div class="d-flex justify-content-between">
+    <h3 id="testTitle">Loading test...</h3>
+    <div>Timer: <span id="timer">00:00</span></div>
+  </div>
+  <div class="row mt-3">
+    <div class="col-md-8">
+      <div id="questionsWrap"></div>
+      <div class="mt-3">
+        <button id="submitTest" class="btn btn-glow">Submit Answers</button>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="video-border mb-3">
+        <video id="video" autoplay playsinline width="320" height="240"></video>
+      </div>
+      <div class="glass p-2">
+        <h6>AI Monitoring</h6>
+        <p>Face: <span id="faceDetected">—</span></p>
+        <p>Blink: <span id="blink">—</span></p>
+        <p>Mouth: <span id="mouth">—</span></p>
+        <p>Score: <strong id="suspicion">0%</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TEST_ID = "{{ test_id }}";
+let questionsData = null;
+let answers = {};
+let sec = 0, timerInterval=null;
+
+async function fetchTest(){
+  const res = await fetch('/get_test/' + TEST_ID);
+  if(res.status !== 200){ alert('Test not found'); return; }
+  questionsData = await res.json();
+  document.getElementById('testTitle').innerText = questionsData.title || 'Test';
+  renderQuestions();
+  startTimer();
+  // start camera and proctoring capture
+  startCameraAndCapture();
+}
+
+function renderQuestions(){
+  const wrap = document.getElementById('questionsWrap');
+  wrap.innerHTML = '';
+  questionsData.questions.forEach((q, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'card p-3 mb-2';
+    card.innerHTML = `<div><strong>Q${idx+1}.</strong> ${q.q}</div>
+      <div class="mt-2">${q.options.map((opt,i)=>`<div><label><input type="radio" name="q${idx}" value="${i}"> ${opt}</label></div>`).join('')}</div>`;
+    wrap.appendChild(card);
+  });
+}
+
+document.getElementById('submitTest').onclick = async ()=>{
+  // gather answers
+  const formEls = document.querySelectorAll('[name^="q"]');
+  answers = {};
+  const qCount = questionsData.questions.length;
+  for(let i=0;i<qCount;i++){
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    if(sel) answers[i] = sel.value;
+  }
+  // send to server along with session_id if you used one (for proctoring)
+  const session_id = window.PROCTOR_SESSION_ID || null;
+  const res = await fetch('/submit_test', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({test_id: TEST_ID, answers: answers, session_id: session_id})});
+  const j = await res.json();
+  if(j.status === 'ok'){
+    alert('Your score: ' + j.score + '% ('+ j.correct +'/'+ j.total +')');
+    window.location = '/dashboard';
+  } else alert('Error submitting test');
+};
+
+function startTimer(){
+  if(timerInterval) return;
+  sec = 0;
+  timerInterval = setInterval(()=>{ sec++; document.getElementById('timer').innerText = (String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')); }, 1000);
+}
+
+function stopTimer(){ clearInterval(timerInterval); timerInterval=null; }
+
+// Camera + proctoring: reuse capture logic (send frames to /process_frame)
+// same code as in test.js but smaller resolution and integrated
+async function startCameraAndCapture(){
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ video: { width:640, height:480 }, audio:false });
+    document.getElementById('video').srcObject = s;
+    window.PROCTOR_STREAM = s;
+    // create a small canvas
+    const canvas = document.createElement('canvas'); canvas.width=480; canvas.height=360;
+    const ctx = canvas.getContext('2d');
+    window.PROCTOR_SESSION_ID = 'sess_' + Date.now();
+    // start interval
+    window.PROCTOR_INTERVAL = setInterval(async ()=>{
+      try {
+        ctx.drawImage(document.getElementById('video'), 0,0,canvas.width, canvas.height);
+        const data = canvas.toDataURL('image/jpeg', 0.6);
+        const res = await fetch('/process_frame', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({image: data, session_id: window.PROCTOR_SESSION_ID})});
+        const j = await res.json();
+        if(!j) return;
+        document.getElementById('faceDetected').innerText = j.face_count;
+        document.getElementById('blink').innerText = j.blink ? 'Yes':'No';
+        document.getElementById('mouth').innerText = j.mouth ? 'Yes':'No';
+        document.getElementById('suspicion').innerText = j.score + '%';
+        // if suspicion high, show tiny in-page warning
+        if (j.score >= 50) {
+          const a = document.createElement('div'); a.className='alert alert-danger mt-2'; a.innerText='⚠ Flag: '+ j.score +'%'; document.querySelector('.glass').prepend(a);
+          setTimeout(()=>a.remove(),6000);
+        }
+      } catch(e){ console.error(e); }
+    }, 1000);
+  } catch(e){ alert('Camera error: ' + e.message); }
+}
+
+// stop capture on page unload
+window.addEventListener('beforeunload', ()=>{
+  try { clearInterval(window.PROCTOR_INTERVAL); if(window.PROCTOR_STREAM) window.PROCTOR_STREAM.getTracks().forEach(t=>t.stop()); } catch(e){}
+});
+
+fetchTest();
+</script>
+{% endblock %}
